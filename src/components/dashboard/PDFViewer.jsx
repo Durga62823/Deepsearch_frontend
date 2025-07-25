@@ -3,7 +3,6 @@ import { Viewer, Worker, SpecialZoomLevel } from '@react-pdf-viewer/core';
 import { highlightPlugin } from '@react-pdf-viewer/highlight';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, AlertCircle } from "lucide-react";
-import * as pdfjsLib from 'pdfjs-dist/build/pdf';
 
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/highlight/lib/styles/index.css';
@@ -17,34 +16,36 @@ const PDFViewer = ({ fileUrl, entities, onEntityClick, rawText, documentId }) =>
   useEffect(() => {
     const loadPDF = async () => {
       if (!documentId) {
-        console.log('PDFViewer: No documentId provided, using direct fileUrl:', fileUrl);
+        console.log('📄 No documentId provided. Using direct fileUrl:', fileUrl);
         setPdfUrl(fileUrl);
         setLoading(false);
         return;
       }
 
       try {
-        console.log('PDFViewer: Loading PDF for documentId:', documentId);
+        console.log('🔁 Loading PDF for documentId:', documentId);
         setLoading(true);
         setError(null);
 
         const token = localStorage.getItem('token');
+        console.log("🔐 Token from localStorage:", token);
+
         if (!token) {
-          throw new Error('No authentication token found');
+          throw new Error('No authentication token found. Cannot access protected PDF.');
         }
 
         const apiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/documents/${documentId}/download`;
-        console.log('PDFViewer: API URL:', apiUrl);
+        console.log('🌐 Fetching PDF from:', apiUrl);
 
         const response = await fetch(apiUrl, {
           method: 'GET',
           headers: {
             'x-auth-token': token,
-            'Content-Type': 'application/pdf',
           },
         });
 
-        console.log('PDFViewer: Response status:', response.status);
+        console.log('📦 Response status:', response.status);
+
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(`HTTP ${response.status}: ${errorText}`);
@@ -54,7 +55,7 @@ const PDFViewer = ({ fileUrl, entities, onEntityClick, rawText, documentId }) =>
         const url = URL.createObjectURL(blob);
         setPdfUrl(url);
       } catch (err) {
-        console.error('PDFViewer: Failed to load PDF:', err);
+        console.error('❌ Failed to load PDF:', err);
         setError(`Failed to load PDF document: ${err.message}`);
       } finally {
         setLoading(false);
