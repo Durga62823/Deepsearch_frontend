@@ -1,22 +1,21 @@
-// src/pages/DocumentViewPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { documentAPI } from '../services/api'; // Import document API service
-import PDFViewer from '../components/dashboard/PDFViewer'; // Component for PDF display
-import EntitySidebar from '../components/dashboard/EntitySidebar'; // Component for displaying entities
+import { documentAPI } from '../services/api'; 
+import PDFViewer from '../components/dashboard/PDFViewer';
+import EntitySidebar from '../components/dashboard/EntitySidebar';
 import { Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const DocumentViewPage = () => {
-  const { id } = useParams(); // Get document ID from URL parameters
-  const [document, setDocument] = useState(null); // State to store the fetched document
-  const [loading, setLoading] = useState(true); // Loading state for fetching document
-  const [error, setError] = useState(''); // Error state for fetch operations
-  const [selectedEntity, setSelectedEntity] = useState(null); // State to track selected entity in sidebar
+  const { id } = useParams();
+  const [document, setDocument] = useState(null);
+  const [loading, setLoading] = useState(true); 
+  const [error, setError] = useState(''); 
+  const [selectedEntity, setSelectedEntity] = useState(null); 
 
-  // useEffect to fetch the specific document based on its ID
+
   useEffect(() => {
     const fetchDocument = async () => {
       setLoading(true); // Start loading
@@ -31,17 +30,15 @@ const DocumentViewPage = () => {
         setLoading(false); // End loading
       }
     };
-    
-    // Fetch only if an ID is provided
+  
     if (id) {
       fetchDocument();
     } else {
       setLoading(false);
-      setError('No document ID provided.'); // Set error if no ID is in URL
+      setError('No document ID provided.');
     }
-  }, [id]); // Re-run when 'id' parameter changes
+  }, [id]);
 
-  // Handler for when an entity is clicked in the sidebar or PDF viewer
   const handleEntityClick = (entity) => {
     setSelectedEntity(entity); // Set the selected entity
   };
@@ -94,9 +91,9 @@ const DocumentViewPage = () => {
             </CardHeader>
             <CardContent>
               <PDFViewer 
-                fileUrl={document.cloudinaryUrl} // URL of the PDF to display
-                entities={document.entities} // Entities to highlight in the PDF
-                onEntityClick={handleEntityClick} // Callback for entity clicks
+                fileUrl={document.cloudinaryUrl}
+                entities={document.entities} 
+                onEntityClick={handleEntityClick} 
                 rawText={document.rawText} // Raw text for context (if needed by PDF viewer)
                 documentId={document._id} // Pass document ID for proxy route
               />
