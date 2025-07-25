@@ -1,7 +1,7 @@
 // src/services/api.js
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_PORT // removed /api
+const API_URL = import.meta.env.VITE_API_URL // removed /api
 
 
 const api = axios.create({
