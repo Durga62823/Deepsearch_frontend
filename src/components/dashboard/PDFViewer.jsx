@@ -33,7 +33,7 @@ const PDFViewer = ({ fileUrl, entities, onEntityClick, rawText, documentId }) =>
           throw new Error('No authentication token found');
         }
 
-        const apiUrl = `${import.meta.env.VITE_API_URL}/documents/${documentId}/download`;
+        const apiUrl = `$ https://deepsearch-backend-n99w.onrender.com/api/documents/${documentId}/download`;
         console.log('PDFViewer: API URL:', apiUrl);
 
         const response = await fetch(apiUrl, {
