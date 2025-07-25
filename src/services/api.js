@@ -49,9 +49,9 @@ api.interceptors.response.use(
 // Export an object containing authentication-related API calls
 export const authAPI = {
   // Login function: sends email and password to the login endpoint
-  login: (email, password) => api.post('/auth/login', { email, password }),
+  login: (email, password) => api.post('login', { email, password }),
   // Signup function: sends name, email, and password to the signup endpoint
-  signup: (name, email, password) => api.post('/auth/signup', { name, email, password }),
+  signup: (name, email, password) => api.post('/signup', { name, email, password }),
 };
 
 // Export an object containing document-related API calls
