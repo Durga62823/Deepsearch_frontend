@@ -33,7 +33,7 @@ const PDFViewer = ({ fileUrl, entities, onEntityClick, rawText, documentId }) =>
           throw new Error('No authentication token found');
         }
 
-        const apiUrl = `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000/api'}/documents/${documentId}/download`;
+        const apiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/documents/${documentId}/download`;
         console.log('PDFViewer: API URL:', apiUrl);
 
         const response = await fetch(apiUrl, {
