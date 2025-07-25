@@ -34,6 +34,7 @@ export default function LoginPage() {
       }
     } catch (err) {
       setError(err.response?.data?.message || "Login failed. Check credentials.");
+      console.error('Login failed:', err.response?.data || err.message)
     } finally {
       setLoading(false);
     }
