@@ -1,68 +1,64 @@
+// src/components/dashboard/PDFViewer.jsx
+
 import React, { useEffect, useState } from 'react';
 import { Worker, Viewer } from '@react-pdf-viewer/core';
 import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
-import { highlightPlugin } from '@react-pdf-viewer/highlight';
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/default-layout/lib/styles/index.css';
 import { Button } from "@/components/ui/button";
-import { Download, RotateCw, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import { Download, RotateCw, ZoomIn, ZoomOut, Maximize2, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2 } from "lucide-react";
 
-const highlightKeywords = (textLayer, entities) => {
-  if (!textLayer || !entities) return;
-
-  entities.forEach(({ value }) => {
-    const spans = Array.from(textLayer.querySelectorAll('span'));
-    spans.forEach((span) => {
-      if (span.textContent.includes(value)) {
-        span.style.backgroundColor = '#facc15';
-        span.style.borderRadius = '4px';
-        span.style.padding = '0 2px';
-      }
-    });
-  });
-};
 
 export default function PDFViewer({ documentId, accessToken, entities }) {
-  // --- DEBUGGING STEP 1 ---
-  // This log will show if the component is receiving the necessary props.
-  console.log("PDFViewer received props:", { documentId, accessToken });
-
   const [fileUrl, setFileUrl] = useState(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
   const [scale, setScale] = useState(1.0);
   const [rotation, setRotation] = useState(0);
   const defaultLayout = defaultLayoutPlugin();
-  const highlight = highlightPlugin();
 
   useEffect(() => {
     const fetchPdf = async () => {
+      setLoading(true);
+      setError('');
+
       try {
-        console.log(`Attempting to fetch PDF with ID: ${documentId}`);
-        const res = await fetch(`https://deepsearch-backend-n99w.onrender.com/api/documents/${documentId}`, {
+        // This URL now points to the correct /download endpoint on your backend
+        const res = await fetch(`https://deepsearch-backend-n99w.onrender.com/api/documents/${documentId}/download`, {
           headers: {
+            // Sends the token in the format your middleware expects
             'x-auth-token': accessToken,
           },
         });
 
-        // --- DEBUGGING STEP 2 ---
-        // This check will catch server errors like 401, 403, 404, or 500.
         if (!res.ok) {
-            // Try to get a more specific error message from the server's response body.
-            const errorData = await res.json().catch(() => ({ message: res.statusText }));
-            throw new Error(`Server responded with ${res.status}: ${errorData.message}`);
+          const errorData = await res.json().catch(() => ({ msg: `Request failed with status ${res.status}` }));
+          throw new Error(errorData.msg || 'Failed to download PDF.');
         }
 
         const blob = await res.blob();
+
+        if (blob.type !== 'application/pdf') {
+          throw new Error(`Invalid file type received: ${blob.type}. Expected a PDF.`);
+        }
+
         setFileUrl(URL.createObjectURL(blob));
-        console.log("Successfully created blob URL for PDF.");
 
       } catch (err) {
-        console.error('Failed to fetch PDF:', err);
+        console.error('Failed to fetch and load PDF:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
     };
 
-    // Only attempt to fetch if both documentId and accessToken are present.
     if (documentId && accessToken) {
       fetchPdf();
+    } else {
+        setLoading(false);
+        setError("Document ID or access token is missing.");
     }
   }, [documentId, accessToken]);
 
@@ -73,44 +69,43 @@ export default function PDFViewer({ documentId, accessToken, entities }) {
   const handleRotate = () => setRotation((prev) => (prev + 90) % 360);
 
   return (
-    <div className="flex flex-col h-full border rounded-xl shadow-md bg-white">
+    <div className="flex flex-col h-[75vh] border rounded-xl shadow-md bg-white">
       <div className="flex items-center justify-between p-4 border-b">
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => handleZoom('in')}><ZoomIn className="w-4 h-4" /></Button>
-          <Button size="sm" variant="outline" onClick={() => handleZoom('out')}><ZoomOut className="w-4 h-4" /></Button>
-          <Button size="sm" variant="outline" onClick={handleRotate}><RotateCw className="w-4 h-4" /></Button>
+          <Button size="sm" variant="outline" onClick={() => handleZoom('in')} disabled={!fileUrl}><ZoomIn className="w-4 h-4" /></Button>
+          <Button size="sm" variant="outline" onClick={() => handleZoom('out')} disabled={!fileUrl}><ZoomOut className="w-4 h-4" /></Button>
+          <Button size="sm" variant="outline" onClick={handleRotate} disabled={!fileUrl}><RotateCw className="w-4 h-4" /></Button>
         </div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={() => window.open(fileUrl, '_blank')} disabled={!fileUrl}><Download className="w-4 h-4" /></Button>
-          <Button size="sm" variant="outline" onClick={() => document.fullscreenElement ? document.exitFullscreen() : document.querySelector('.rpv-core__viewer')?.requestFullscreen()}>
+          <Button size="sm" variant="outline" disabled={!fileUrl} onClick={() => document.fullscreenElement ? document.exitFullscreen() : document.querySelector('.rpv-core__viewer')?.requestFullscreen()}>
             <Maximize2 className="w-4 h-4" />
           </Button>
         </div>
       </div>
       <div className="flex-1 overflow-auto rpv-core__viewer">
-        {fileUrl ? (
-          <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-            <div className="px-4 py-2">
-              <Viewer
-                fileUrl={fileUrl}
-                plugins={[defaultLayout, highlight]}
-                renderPageLayer={({ canvasLayer, textLayer }) => {
-                  highlightKeywords(textLayer, entities);
-                  return (
-                    <>
-                      {canvasLayer}
-                      {textLayer}
-                    </>
-                  );
-                }}
-                defaultScale={scale}
-                initialRotation={rotation}
-              />
+        {loading ? (
+            <div className="flex items-center justify-center h-full text-muted-foreground">
+                <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                Loading PDF...
             </div>
+        ) : error ? (
+            <div className="p-4">
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+            </div>
+        ) : fileUrl ? (
+          <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+            <Viewer
+              fileUrl={fileUrl}
+              plugins={[defaultLayout]}
+              defaultScale={scale}
+              initialRotation={rotation}
+            />
           </Worker>
-        ) : (
-          <div className="flex items-center justify-center h-full text-sm text-muted-foreground">Loading PDF...</div>
-        )}
+        ) : null}
       </div>
     </div>
   );
