@@ -1,5 +1,8 @@
+// src/pages/DocumentViewPage.jsx
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext'; // <--- STEP 1: Import useAuth
 import { documentAPI } from '../services/api'; 
 import PDFViewer from '../components/dashboard/PDFViewer';
 import EntitySidebar from '../components/dashboard/EntitySidebar';
@@ -10,24 +13,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const DocumentViewPage = () => {
   const { id } = useParams();
+  const { accessToken } = useAuth(); // <--- STEP 2: Get the accessToken
+  
   const [document, setDocument] = useState(null);
   const [loading, setLoading] = useState(true); 
   const [error, setError] = useState(''); 
   const [selectedEntity, setSelectedEntity] = useState(null); 
 
-
   useEffect(() => {
     const fetchDocument = async () => {
-      setLoading(true); // Start loading
-      setError(''); // Clear previous errors
+      setLoading(true);
+      setError('');
       try {
-        const res = await documentAPI.getById(id); // Fetch document by ID
-        setDocument(res.data); // Update document state
+        const res = await documentAPI.getById(id);
+        setDocument(res.data);
       } catch (err) {
         console.error('Failed to load document:', err);
-        setError(err.response?.data?.message || 'Failed to load document.'); // Set error message
+        setError(err.response?.data?.message || 'Failed to load document.');
       } finally {
-        setLoading(false); // End loading
+        setLoading(false);
       }
     };
   
@@ -40,10 +44,9 @@ const DocumentViewPage = () => {
   }, [id]);
 
   const handleEntityClick = (entity) => {
-    setSelectedEntity(entity); // Set the selected entity
+    setSelectedEntity(entity);
   };
 
-  // Conditional rendering based on loading and error states
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
@@ -67,22 +70,14 @@ const DocumentViewPage = () => {
   }
 
   if (!document) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background px-6 py-8 md:px-20">
-        <Alert variant="default" className="max-w-md">
-          <AlertCircle className="h-5 w-5" />
-          <AlertDescription className="text-base">Document not found.</AlertDescription>
-        </Alert>
-      </div>
-    );
+    // This state is reached if loading is false but document is still null
+    return null;
   }
 
-  // Render the document view with PDF viewer and entity sidebar
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-6 py-8 md:px-20">
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Left panel: PDF Viewer */}
           <Card className="flex-1">
             <CardHeader className="space-y-2">
               <CardTitle className="text-3xl font-bold tracking-tight">
@@ -90,17 +85,15 @@ const DocumentViewPage = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {/* --- STEP 3: Pass the correct props to PDFViewer --- */}
               <PDFViewer 
-                fileUrl={document.cloudinaryUrl}
+                documentId={document._id}
+                accessToken={accessToken}
                 entities={document.entities} 
-                onEntityClick={handleEntityClick} 
-                rawText={document.rawText} // Raw text for context (if needed by PDF viewer)
-                documentId={document._id} // Pass document ID for proxy route
               />
             </CardContent>
           </Card>
           
-          {/* Right panel: Entity Sidebar */}
           <Card className="w-full lg:w-96">
             <CardHeader className="space-y-2">
               <CardTitle className="text-xl font-bold">
@@ -110,9 +103,9 @@ const DocumentViewPage = () => {
             <CardContent>
               <ScrollArea className="h-[calc(100vh-16rem)]">
                 <EntitySidebar 
-                  entities={document.entities} // Entities to display in the sidebar
-                  selectedEntity={selectedEntity} // Currently selected entity
-                  onSelect={setSelectedEntity} // Callback to update selected entity
+                  entities={document.entities}
+                  selectedEntity={selectedEntity}
+                  onSelect={handleEntityClick}
                 />
               </ScrollArea>
             </CardContent>
