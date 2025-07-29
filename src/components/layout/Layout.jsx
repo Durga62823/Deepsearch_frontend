@@ -1,25 +1,39 @@
 // src/components/layout/Layout.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
+import UploadModal from '@/components/dashboard/UploadModal'; // Changed import path to use alias
+import { ToastContainer, toast } from 'react-toastify';
 
 const Layout = () => {
-  return (
-    // Keep a simple wrapper div
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#f0f2f5' }}>
-      <Navbar />
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
-      {/* Main content area - simplified styles */}
-      <main style={{ flexGrow: 1, padding: '20px', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
-        <Outlet /> {/* THIS IS WHERE YOUR PAGE CONTENT SHOULD RENDER */}
+  const handleUploadSuccess = (newDocument) => {
+    setShowUploadModal(false);
+    toast.success('Document uploaded successfully!');
+  };
+
+  return (
+    <div className="flex flex-col min-h-screen bg-gray-50 font-inter">
+      <Navbar onUploadClick={() => setShowUploadModal(true)} />
+
+      <main className="flex-grow container mx-auto px-6 py-8 md:px-20">
+        <Outlet />
       </main>
 
-      {/* Footer - simplified styles */}
-      <footer style={{ backgroundColor: 'black', color: 'white', padding: '15px', textAlign: 'center', fontSize: '14px' }}>
+      <footer className="bg-gray-800 text-white p-4 text-center text-sm">
         © {new Date().getFullYear()} DeepSearch. All rights reserved.
       </footer>
+
+      {showUploadModal && (
+        <UploadModal
+          onClose={() => setShowUploadModal(false)}
+          onSuccess={handleUploadSuccess}
+        />
+      )}
+
+      <ToastContainer position="top-right" autoClose={5000} />
     </div>
-    
   );
 };
 

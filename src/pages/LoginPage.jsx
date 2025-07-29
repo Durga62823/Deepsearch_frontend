@@ -56,7 +56,7 @@ export default function LoginPage() {
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-sm space-y-6">
             <div className="space-y-2 text-center">
-              <h1 className="text-3xl font-bold  tracking-tight">Welcome to DeepSearch</h1>
+              <h1 className="text-3xl font-bold tracking-tight">Welcome to DeepSearch</h1>
               <p className="text-muted-foreground">Enter your credentials to access your account</p>
             </div>
             {error && <div className="bg-destructive/15 text-destructive p-4 rounded-md text-center">{error}</div>}
