@@ -1,65 +1,54 @@
 // src/context/AuthContext.jsx
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
+// --- FIX 1: The missing useAuth hook ---
+// This is the custom hook that your other components will use to get the context data.
+export const useAuth = () => {
+  return useContext(AuthContext);
+};
 
 export const AuthContext = createContext();
 
-
 export const AuthProvider = ({ children }) => {
-
   const [user, setUser] = useState(null);
-
+  const [accessToken, setAccessToken] = useState(null); // --- FIX 2: Add state for the token
   const [loading, setLoading] = useState(true);
 
-  console.log('AuthContext: Initializing, user:', user, 'loading:', loading);
-
-
+  // This effect runs once on app load to check for a persisted session
   useEffect(() => {
     const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user'); // User data could include email, ID, name etc.
-
-    console.log('AuthContext useEffect: Checking localStorage...');
+    const userData = localStorage.getItem('user');
 
     if (token && userData) {
       try {
         const parsedUser = JSON.parse(userData);
-        // Basic validation for parsed user object, e.g., check if it has an 'id' or 'email'
-        if (parsedUser && parsedUser.id) {
+        if (parsedUser && (parsedUser.id || parsedUser.email)) {
           setUser(parsedUser);
-          console.log('AuthContext useEffect: User found in localStorage:', parsedUser);
+          setAccessToken(token); // Set the token from localStorage into state
         } else {
-          // If userData is not valid, clear it
-          console.warn('AuthContext useEffect: Invalid user data in localStorage, clearing it.');
+          // Clear invalid data from storage
           localStorage.removeItem('token');
           localStorage.removeItem('user');
-          setUser(null);
         }
       } catch (e) {
-        // Handle case where userData is not valid JSON
-        console.error("AuthContext useEffect: Failed to parse user data from localStorage:", e);
-        // Clear invalid data to prevent persistent errors
+        console.error("Failed to parse user data from localStorage:", e);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        setUser(null); // Ensure user is null if data is bad
       }
-    } else {
-      console.log('AuthContext useEffect: No token or user data found in localStorage.');
-      setUser(null);
     }
     setLoading(false);
-    console.log('AuthContext useEffect: Initial check complete, loading set to false.');
   }, []); 
 
-  // Log state whenever it changes (for debugging purposes)
+  // Log state for debugging
   useEffect(() => {
-    console.log('AuthContext State Changed: user:', user, 'loading:', loading);
-  }, [user, loading]);
-
+    console.log('AuthContext State Changed:', { user, accessToken, loading });
+  }, [user, accessToken, loading]);
 
   const login = (token, userData) => {
     localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(userData)); // Store user data as a string
+    localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
+    setAccessToken(token); // Set the token in state on login
     console.log('AuthContext: User logged in:', userData);
   };
 
@@ -67,13 +56,21 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
+    setAccessToken(null); // Clear the token from state on logout
     console.log('AuthContext: User logged out.');
   };
 
+  const value = {
+    user,
+    accessToken, // --- FIX 2: Provide the accessToken to the rest of your app ---
+    login,
+    logout,
+    loading
+  };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
-      {children}
+    <AuthContext.Provider value={value}>
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
