@@ -39,7 +39,7 @@ export default function PDFViewer({ documentId, accessToken, entities }) {
         console.log(`Attempting to fetch PDF with ID: ${documentId}`);
         const res = await fetch(`https://deepsearch-backend-n99w.onrender.com/api/documents/${documentId}`, {
           headers: {
-            Authorization: `Bearer ${accessToken}`,
+            'x-auth-token': accessToken,
           },
         });
 
