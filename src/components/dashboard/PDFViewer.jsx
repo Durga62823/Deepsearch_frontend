@@ -13,8 +13,7 @@ const highlightKeywords = (textLayer, entities) => {
   entities.forEach(({ value }) => {
     const spans = Array.from(textLayer.querySelectorAll('span'));
     spans.forEach((span) => {
-      if (span.textContent.includes(value)) { // Using .includes for better matching
-        // This part could be improved to highlight only the matching text
+      if (span.textContent.includes(value)) {
         span.style.backgroundColor = '#facc15';
         span.style.borderRadius = '4px';
         span.style.padding = '0 2px';
@@ -24,6 +23,10 @@ const highlightKeywords = (textLayer, entities) => {
 };
 
 export default function PDFViewer({ documentId, accessToken, entities }) {
+  // --- DEBUGGING STEP 1 ---
+  // This log will show if the component is receiving the necessary props.
+  console.log("PDFViewer received props:", { documentId, accessToken });
+
   const [fileUrl, setFileUrl] = useState(null);
   const [scale, setScale] = useState(1.0);
   const [rotation, setRotation] = useState(0);
@@ -33,19 +36,33 @@ export default function PDFViewer({ documentId, accessToken, entities }) {
   useEffect(() => {
     const fetchPdf = async () => {
       try {
+        console.log(`Attempting to fetch PDF with ID: ${documentId}`);
         const res = await fetch(`https://deepsearch-backend-n99w.onrender.com/api/documents/${documentId}`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
         });
+
+        // --- DEBUGGING STEP 2 ---
+        // This check will catch server errors like 401, 403, 404, or 500.
+        if (!res.ok) {
+            // Try to get a more specific error message from the server's response body.
+            const errorData = await res.json().catch(() => ({ message: res.statusText }));
+            throw new Error(`Server responded with ${res.status}: ${errorData.message}`);
+        }
+
         const blob = await res.blob();
         setFileUrl(URL.createObjectURL(blob));
+        console.log("Successfully created blob URL for PDF.");
+
       } catch (err) {
         console.error('Failed to fetch PDF:', err);
       }
     };
+
+    // Only attempt to fetch if both documentId and accessToken are present.
     if (documentId && accessToken) {
-        fetchPdf();
+      fetchPdf();
     }
   }, [documentId, accessToken]);
 
@@ -65,14 +82,13 @@ export default function PDFViewer({ documentId, accessToken, entities }) {
         </div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={() => window.open(fileUrl, '_blank')} disabled={!fileUrl}><Download className="w-4 h-4" /></Button>
-          <Button size="sm" variant="outline" onClick={() => document.fullscreenElement ? document.exitFullscreen() : document.querySelector('.rpv-core__viewer').requestFullscreen()}>
+          <Button size="sm" variant="outline" onClick={() => document.fullscreenElement ? document.exitFullscreen() : document.querySelector('.rpv-core__viewer')?.requestFullscreen()}>
             <Maximize2 className="w-4 h-4" />
           </Button>
         </div>
       </div>
       <div className="flex-1 overflow-auto rpv-core__viewer">
         {fileUrl ? (
-          // --- THIS IS THE CORRECTED LINE ---
           <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
             <div className="px-4 py-2">
               <Viewer
