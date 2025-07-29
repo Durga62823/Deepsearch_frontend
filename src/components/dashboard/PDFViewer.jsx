@@ -32,7 +32,7 @@ export default function PDFViewer({ documentId, accessToken, entities }) {
   useEffect(() => {
     const fetchPdf = async () => {
       try {
-        const res = await fetch(`https://deepsearch-backend.vercel.app/api/documents/${documentId}`, {
+        const res = await fetch(`https://deepsearch-backend-n99w.onrender.com/api/documents/${documentId}`, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
