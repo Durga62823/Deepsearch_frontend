@@ -47,7 +47,7 @@ export default function LoginPage() {
               <GalleryVerticalEnd className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
             <span>
-              Deep<span className="text-red-600">Search</span>
+              Deep <span className="text-red-600">Search</span>
             </span>
           </a>
         </div>
