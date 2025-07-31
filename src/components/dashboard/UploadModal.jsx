@@ -1,4 +1,3 @@
-// src/components/dashboard/UploadModal.jsx
 import React, { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { documentAPI } from '../../services/api';
@@ -8,11 +7,13 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Loader2, Upload } from 'lucide-react';
 
-const UploadModal = ({ onClose, onSuccess }) => {
+const UploadModal = ({ isOpen, onClose, onSuccess }) => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
@@ -63,7 +64,6 @@ const UploadModal = ({ onClose, onSuccess }) => {
       setMessage(res.data.message || 'Document uploaded successfully!');
       onSuccess(res.data.document);
     } catch (err) {
-      console.error('Upload failed:', err.response ? err.response.data : err.message);
       setError(err.response?.data?.message || 'Failed to upload document. Please try again.');
       setMessage('');
     } finally {
@@ -72,25 +72,38 @@ const UploadModal = ({ onClose, onSuccess }) => {
   };
 
   return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="w-[95vw] max-w-md mx-auto">
         <DialogHeader>
-          <DialogTitle>Upload PDF</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">Upload PDF</DialogTitle>
+          <DialogDescription className="text-sm sm:text-base">
+            Drag and drop your PDF file here, or click to select a file.
+          </DialogDescription>
         </DialogHeader>
 
         <div
           {...getRootProps()}
-          className={`border-2 border-dashed rounded-lg p-10 text-center transition-colors cursor-pointer mb-4
+          className={`border-2 border-dashed rounded-lg p-6 sm:p-10 text-center transition-colors cursor-pointer mb-4
             ${isDragActive ? 'border-primary bg-primary/10' : 'border-muted bg-muted hover:bg-muted/80'}
           `}
         >
           <input {...getInputProps()} />
           {file ? (
-            <p className="text-sm">Selected: <span className="font-medium text-primary">{file.name}</span></p>
+            <div className="space-y-2">
+              <p className="text-sm sm:text-base">Selected:</p>
+              <p className="font-medium text-primary text-sm sm:text-base break-all">{file.name}</p>
+            </div>
           ) : isDragActive ? (
-            <p className="text-primary font-medium">Drop your PDF here!</p>
+            <p className="text-primary font-medium text-sm sm:text-base">Drop your PDF here!</p>
           ) : (
-            <p className="text-muted-foreground text-sm">Drag & drop a PDF here, or <span className="text-primary underline cursor-pointer" onClick={open}>click to select</span></p>
+            <div className="space-y-2">
+              <p className="text-muted-foreground text-sm sm:text-base">
+                Drag & drop a PDF here, or{' '}
+                <span className="text-primary underline cursor-pointer" onClick={open}>
+                  click to select
+                </span>
+              </p>
+            </div>
           )}
           <input
             type="file"
@@ -103,27 +116,41 @@ const UploadModal = ({ onClose, onSuccess }) => {
 
         {error && (
           <Alert variant="destructive">
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
+            <AlertTitle className="text-sm sm:text-base">Error</AlertTitle>
+            <AlertDescription className="text-xs sm:text-sm">{error}</AlertDescription>
           </Alert>
         )}
 
         {message && (
           <Alert>
-            <AlertTitle>Success</AlertTitle>
-            <AlertDescription>{message}</AlertDescription>
+            <AlertTitle className="text-sm sm:text-base">Success</AlertTitle>
+            <AlertDescription className="text-xs sm:text-sm">{message}</AlertDescription>
           </Alert>
         )}
 
-        <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={onClose} disabled={uploading}>
+        <DialogFooter className="mt-4 flex flex-col sm:flex-row gap-2 sm:gap-0">
+          <Button 
+            variant="outline" 
+            onClick={onClose} 
+            disabled={uploading}
+            className="w-full sm:w-auto order-2 sm:order-1"
+          >
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={!file || uploading}
+            className="w-full sm:w-auto order-1 sm:order-2"
           >
-            {uploading ? 'Uploading...' : 'Upload'}
+            {uploading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading...
+              </>
+            ) : (
+              <>
+                <Upload className="mr-2 h-4 w-4" /> Upload
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

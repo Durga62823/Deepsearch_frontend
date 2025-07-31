@@ -10,7 +10,6 @@ import { Download, RotateCw, ZoomIn, ZoomOut, Maximize2, AlertCircle } from 'luc
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
 
-
 export default function PDFViewer({ documentId, accessToken, entities }) {
   const [fileUrl, setFileUrl] = useState(null);
   const [error, setError] = useState('');
@@ -25,10 +24,11 @@ export default function PDFViewer({ documentId, accessToken, entities }) {
       setError('');
 
       try {
-        // This URL now points to the correct /download endpoint on your backend
+        // --- THIS IS THE CRITICAL CHANGE ---
+        // The URL now points to the correct /download endpoint on your backend.
         const res = await fetch(`https://deepsearch-backend-n99w.onrender.com/api/documents/${documentId}/download`, {
           headers: {
-            // Sends the token in the format your middleware expects
+            // Sends the token in the format your authMiddleware expects
             'x-auth-token': accessToken,
           },
         });

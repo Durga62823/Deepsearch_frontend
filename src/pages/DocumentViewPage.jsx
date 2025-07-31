@@ -1,119 +1,115 @@
-// src/pages/DocumentViewPage.jsx
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; // <--- STEP 1: Import useAuth
-import { documentAPI } from '../services/api'; 
-import PDFViewer from '../components/dashboard/PDFViewer';
-import EntitySidebar from '../components/dashboard/EntitySidebar';
-import { Loader2, AlertCircle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from '../context/AuthContext';
+import { documentAPI } from '../services/api';
+import { Viewer, Worker } from '@react-pdf-viewer/core';
+import { defaultLayoutPlugin } from '@react-pdf-viewer/default-layout';
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/default-layout/lib/styles/index.css';
+import { toast } from 'react-toastify';
+import ChatWindow from '../components/chat/ChatWindow';
+import { MessageSquare, X } from 'lucide-react';
 
-const DocumentViewPage = () => {
+export default function DocumentViewPage() {
   const { id } = useParams();
-  const { accessToken } = useAuth(); // <--- STEP 2: Get the accessToken
-  
+  const { accessToken } = useAuth();
   const [document, setDocument] = useState(null);
-  const [loading, setLoading] = useState(true); 
-  const [error, setError] = useState(''); 
-  const [selectedEntity, setSelectedEntity] = useState(null); 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const defaultLayoutPluginInstance = defaultLayoutPlugin();
 
   useEffect(() => {
     const fetchDocument = async () => {
       setLoading(true);
-      setError('');
+      setError(null);
       try {
-        const res = await documentAPI.getById(id);
-        setDocument(res.data);
+        const response = await documentAPI.getById(id);
+        setDocument(response.data.document);
       } catch (err) {
-        console.error('Failed to load document:', err);
-        setError(err.response?.data?.message || 'Failed to load document.');
+        setError('Failed to load document. It might not exist or you do not have access.');
+        toast.error('Failed to load document.');
       } finally {
         setLoading(false);
       }
     };
-  
     if (id) {
       fetchDocument();
     } else {
       setLoading(false);
-      setError('No document ID provided.');
+      setError('No document ID provided in the URL.');
     }
   }, [id]);
 
-  const handleEntityClick = (entity) => {
-    setSelectedEntity(entity);
-  };
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="flex items-center gap-3 text-muted-foreground">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span className="text-lg">Loading document...</span>
-        </div>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+        <p className="ml-4 text-gray-600">Loading document...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background px-6 py-8 md:px-20">
-        <Alert variant="destructive" className="max-w-md">
-          <AlertCircle className="h-5 w-5" />
-          <AlertDescription className="text-base">{error}</AlertDescription>
-        </Alert>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center text-red-600">
+        <p>{error}</p>
       </div>
     );
   }
 
-  if (!document) {
-    // This state is reached if loading is false but document is still null
-    return null;
+  if (!document || !document.cloudinaryUrl || !document._id) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center text-gray-500">
+        <p>Document data is incomplete or missing. Cannot display PDF.</p>
+      </div>
+    );
+  }
+
+  if (!accessToken) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center text-red-600">
+        <p>Authentication token is missing. Please log in again.</p>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-6 py-8 md:px-20">
-        <div className="flex flex-col lg:flex-row gap-6">
-          <Card className="flex-1">
-            <CardHeader className="space-y-2">
-              <CardTitle className="text-3xl font-bold tracking-tight">
-                {document.title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {/* --- STEP 3: Pass the correct props to PDFViewer --- */}
-              <PDFViewer 
-                documentId={document._id}
-                accessToken={accessToken}
-                entities={document.entities} 
+    <div className="min-h-screen bg-gray-100">
+      <div className="flex flex-col lg:flex-row h-screen">
+        {/* PDF Viewer Section */}
+        <div className="flex-1 lg:w-2/3 p-4 relative">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4 text-center lg:text-left">
+            {document.title}
+          </h1>
+          <div className="h-[calc(100vh-200px)] lg:h-[calc(100vh-120px)] w-full bg-white shadow-lg rounded-lg overflow-hidden">
+            <Worker workerUrl={`https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`}>
+              <Viewer
+                fileUrl={document.cloudinaryUrl}
+                plugins={[defaultLayoutPluginInstance]}
               />
-            </CardContent>
-          </Card>
-          
-          <Card className="w-full lg:w-96">
-            <CardHeader className="space-y-2">
-              <CardTitle className="text-xl font-bold">
-                Entities
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[calc(100vh-16rem)]">
-                <EntitySidebar 
-                  entities={document.entities}
-                  selectedEntity={selectedEntity}
-                  onSelect={handleEntityClick}
-                />
-              </ScrollArea>
-            </CardContent>
-          </Card>
+            </Worker>
+          </div>
+
+          {/* Floating Chat Button - Only visible on mobile/tablet */}
+          <button
+            onClick={() => setIsChatOpen(!isChatOpen)}
+            className="lg:hidden fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors z-40"
+            aria-label="Toggle chat"
+          >
+            {isChatOpen ? <X size={24} /> : <MessageSquare size={24} />}
+          </button>
+        </div>
+
+        {/* Chat Section - Desktop: Always visible, Mobile: Overlay */}
+        <div className={`w-full lg:w-1/3 p-4 transition-all duration-300 ${
+          isChatOpen ? 'block' : 'hidden lg:block'
+        }`}>
+          <div className="h-[calc(100vh-200px)] lg:h-[calc(100vh-120px)]">
+            <ChatWindow documentId={id} />
+          </div>
         </div>
       </div>
     </div>
   );
-};
-
-export default DocumentViewPage;
+}

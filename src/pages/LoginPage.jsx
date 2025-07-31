@@ -1,4 +1,3 @@
-// src/pages/LoginPage.jsx
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { GalleryVerticalEnd } from "lucide-react";
@@ -34,7 +33,6 @@ export default function LoginPage() {
       }
     } catch (err) {
       setError(err.response?.data?.message || "Login failed. Check credentials.");
-      console.error('Login failed:', err.response?.data || err.message)
     } finally {
       setLoading(false);
     }
@@ -42,11 +40,11 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
-      <div className="flex flex-col px-6 py-8 md:px-20">
+      <div className="flex flex-col px-4 py-6 sm:px-6 lg:px-8 xl:px-20">
         <div className="flex justify-center gap-2 md:justify-start">
-          <a href="#" className="flex items-center gap-2 font-semibold text-2xl">
-            <div className="bg-primary text-primary-foreground flex h-10 w-10 items-center justify-center rounded-md">
-              <GalleryVerticalEnd className="h-6 w-6" />
+          <a href="#" className="flex items-center gap-2 font-semibold text-xl sm:text-2xl">
+            <div className="bg-primary text-primary-foreground flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-md">
+              <GalleryVerticalEnd className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
             <span>
               Deep<span className="text-red-600">Search</span>
@@ -54,39 +52,81 @@ export default function LoginPage() {
           </a>
         </div>
         <div className="flex flex-1 items-center justify-center">
-          <div className="w-full max-w-sm space-y-6">
+          <div className="w-full max-w-sm space-y-4 sm:space-y-6">
             <div className="space-y-2 text-center">
-              <h1 className="text-3xl font-bold tracking-tight">Welcome to DeepSearch</h1>
-              <p className="text-muted-foreground">Enter your credentials to access your account</p>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Welcome to DeepSearch</h1>
+              <p className="text-muted-foreground text-sm sm:text-base">Enter your credentials to access your account</p>
             </div>
-            {error && <div className="bg-destructive/15 text-destructive p-4 rounded-md text-center">{error}</div>}
-            <form onSubmit={handleSubmit} className="space-y-6">
+            {error && <div className="bg-destructive/15 text-destructive p-3 sm:p-4 rounded-md text-center text-sm sm:text-base">{error}</div>}
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" placeholder="you@example.com" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={loading} />
+                <Label htmlFor="email" className="text-sm sm:text-base">Email</Label>
+                <Input 
+                  id="email" 
+                  placeholder="you@example.com" 
+                  type="email" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
+                  required 
+                  disabled={loading}
+                  className="text-sm sm:text-base"
+                />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" value={password} placeholder="••••••••" onChange={(e) => setPassword(e.target.value)} required disabled={loading} />
+                <Label htmlFor="password" className="text-sm sm:text-base">Password</Label>
+                <Input 
+                  id="password" 
+                  type="password" 
+                  value={password} 
+                  placeholder="••••••••" 
+                  onChange={(e) => setPassword(e.target.value)} 
+                  required 
+                  disabled={loading}
+                  className="text-sm sm:text-base"
+                />
               </div>
-              <Button type="submit" className="w-full bg-red-400 hover:bg-black rounded-4xl hover:text-rose-50 cursor-pointer" disabled={loading}>{loading ? "Signing in..." : "Sign in"}</Button>
+              <Button 
+                type="submit" 
+                className="w-full bg-red-400 hover:bg-black rounded-4xl hover:text-rose-50 cursor-pointer text-sm sm:text-base py-2 sm:py-3" 
+                disabled={loading}
+              >
+                {loading ? "Signing in..." : "Sign in"}
+              </Button>
             </form>
-            <div className="text-center text-sm">
+            <div className="text-center text-xs sm:text-sm">
               Don't have an account?{' '}
-              <Button variant="link" onClick={() => navigate("/signup")} className="p-0 text-primary font-medium cursor-pointer">Sign up</Button>
+              <Button 
+                variant="link" 
+                onClick={() => navigate("/signup")} 
+                className="p-0 text-primary font-medium cursor-pointer text-xs sm:text-sm"
+              >
+                Sign up
+              </Button>
             </div>
           </div>
         </div>
       </div>
-      <div className="bg-gray-100 hidden lg:flex items-center justify-center p-10 text-center">
+      <div className="bg-gray-100 hidden lg:flex items-center justify-center p-6 sm:p-10 text-center">
         <div className="max-w-md space-y-4">
-          <div className="text-3xl font-semibold ">
-            Smart <span className=" text-red-600">
-              <Typewriter words={["Search", "Insights", "Tagging"]} loop cursor cursorStyle="|" typeSpeed={80} deleteSpeed={50} delaySpeed={1000} />
+          <div className="text-2xl sm:text-3xl font-semibold">
+            Smart <span className="text-red-600">
+              <Typewriter 
+                words={["Search", "Insights", "Tagging"]} 
+                loop 
+                cursor 
+                cursorStyle="|" 
+                typeSpeed={80} 
+                deleteSpeed={50} 
+                delaySpeed={1000} 
+              />
             </span> with AI
           </div>
-          <p className="text-muted-foreground text-base">Log in to explore intelligent document understanding powered by NLP & ML.</p>
-          <p className="text-sm text-gray-500">Built with MERN Stack · Entity Extraction · Semantic Match</p>
+          <p className="text-muted-foreground text-sm sm:text-base">
+            Log in to explore intelligent document understanding powered by NLP & ML.
+          </p>
+          <p className="text-xs sm:text-sm text-gray-500">
+            Built with MERN Stack · Entity Extraction · Semantic Match
+          </p>
         </div>
       </div>
     </div>

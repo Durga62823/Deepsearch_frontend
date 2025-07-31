@@ -1,83 +1,67 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { documentAPI } from '../services/api';
 import DocumentCard from '../components/dashboard/DocumentCard';
 import UploadModal from '../components/dashboard/UploadModal';
-import { AuthContext } from '../context/AuthContext';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Upload, Search, LayoutGrid, LayoutList } from "lucide-react";
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { FaSpinner } from 'react-icons/fa';
+import { Plus, Search, List, Grid } from 'lucide-react';
+import { toast } from 'react-toastify';
 
-const DashboardPage = () => {
-  const { user } = useContext(AuthContext);
-  const navigate = useNavigate();
+export default function DashboardPage() {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [deletingId, setDeletingId] = useState(null);
+  const [error, setError] = useState(null);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filter, setFilter] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
 
   useEffect(() => {
-    const fetchDocuments = async () => {
-      setLoading(true);
-      try {
-        const res = await documentAPI.getAll();  // No filter passed
-        setDocuments(res.data);
-      } catch (err) {
-        setError(err.response?.data?.message || 'Failed to load documents.');
-        toast.error('Failed to load documents.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (user) {
-      fetchDocuments();
-    } else {
-      setLoading(false);
-      setDocuments([]);
-    }
-  }, [user]);
+    setIsUploadModalOpen(false);
+  }, []);
 
-  const handleUploadSuccess = (newDocument) => {
-    setDocuments(prev => [newDocument, ...prev]);
-    setShowUploadModal(false);
+  const fetchDocuments = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await documentAPI.getAll(filter);
+      setDocuments(Array.isArray(response.data.documents) ? response.data.documents : []);
+    } catch (err) {
+      setError('Failed to load documents. Please try again.');
+      setDocuments([]);
+      toast.error('Failed to load documents.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDocuments();
+  }, [filter]);
+
+  const handleDocumentUploaded = (newDocument) => {
+    fetchDocuments();
+    setIsUploadModalOpen(false);
     toast.success('Document uploaded successfully!');
   };
 
   const handleDeleteDocument = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this document?')) return;
-    try {
-      setDeletingId(id);
-      await documentAPI.delete(id);
-      setDocuments(prev => prev.filter(doc => doc._id !== id));
-      toast.success('Document deleted successfully!');
-    } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Failed to delete document.';
-      setError(errorMessage);
-      toast.error(errorMessage);
-    } finally {
-      setDeletingId(null);
+    if (window.confirm('Are you sure you want to delete this document?')) {
+      try {
+        await documentAPI.delete(id);
+        toast.success('Document deleted successfully!');
+        fetchDocuments();
+      } catch (err) {
+        toast.error('Failed to delete document.');
+      }
     }
   };
 
-  const handleToggleFavorite = async (id, newIsFavorite) => {
+  const handleToggleFavorite = async (id, currentStatus) => {
     try {
-      await documentAPI.updateFavoriteStatus(id, newIsFavorite);
-      setDocuments(prevDocs =>
-        prevDocs.map(doc =>
-          doc._id === id ? { ...doc, isFavorite: newIsFavorite } : doc
-        )
-      );
-      const toastMessage = newIsFavorite ? "Added to favorites!" : "Removed from favorites.";
-      toast.success(toastMessage);
+      await documentAPI.updateFavoriteStatus(id, !currentStatus);
+      toast.success(`Document ${!currentStatus ? 'added to' : 'removed from'} favorites.`);
+      fetchDocuments();
     } catch (err) {
-      toast.error("Failed to update favorite status.");
+      toast.error('Failed to update favorite status.');
     }
   };
 
@@ -85,71 +69,99 @@ const DashboardPage = () => {
     doc.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Sort by most recent uploaded document by default
-  const sortedDocuments = filteredDocuments.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
-
   return (
-    <div className="min-h-screen bg-background font-inter">
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
-      <div className="container mx-auto px-6 py-8 md:px-20 space-y-8">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">Your PDF Documents</h2>
-          <div className="flex items-center gap-4 w-full sm:w-auto">
-            <div className="relative flex-grow">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Search documents..."
-                className="pl-9 pr-3 py-2 rounded-md w-full"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+    <div className="min-h-screen bg-gray-100 p-2 sm:p-4 lg:p-6 xl:p-8">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4 sm:mb-6">
+          Your PDF Documents
+        </h1>
+
+        <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6">
+          <div className="relative w-full sm:w-1/2 lg:w-1/3">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              placeholder="Search documents..."
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+            <select
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+            >
+              <option value="all">All Documents</option>
+              <option value="favorites">Favorites</option>
+            </select>
+
+            <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+              <button
+                className={`p-2 ${viewMode === 'grid' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                onClick={() => setViewMode('grid')}
+                aria-label="Grid view"
+              >
+                <Grid size={18} className="sm:w-5 sm:h-5" />
+              </button>
+              <button
+                className={`p-2 ${viewMode === 'list' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                onClick={() => setViewMode('list')}
+                aria-label="List view"
+              >
+                <List size={18} className="sm:w-5 sm:h-5" />
+              </button>
             </div>
-            {/* Removed Filter Dropdown here */}
-            <Button variant="outline" size="icon" onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}>
-              {viewMode === 'grid' ? <LayoutList className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
-            </Button>
-            <Badge variant="secondary" className="px-3 py-1 text-sm font-medium">
-              {sortedDocuments.length} total
-            </Badge>
+
+            <button
+              onClick={() => setIsUploadModalOpen(true)}
+              className="bg-blue-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors text-sm sm:text-base"
+            >
+              <Plus size={18} className="sm:w-5 sm:h-5" /> 
+              <span className="hidden sm:inline">Upload</span>
+            </button>
           </div>
         </div>
+
         {loading ? (
-          <div className="flex items-center justify-center min-h-[400px]">
-            <FaSpinner className="animate-spin text-blue-500 text-3xl mr-3" />
-            <div className="text-muted-foreground text-lg">Loading documents...</div>
+          <div className="text-center py-10">
+            <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-4 text-gray-600 text-sm sm:text-base">Loading documents...</p>
           </div>
-        ) : sortedDocuments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6 text-center">
-            <p className="text-xl text-muted-foreground">No documents found</p>
-            <p className="text-muted-foreground">Upload your first PDF to get started</p>
-            <Button variant="outline" size="lg" className="mt-2" onClick={() => setShowUploadModal(true)}>
-              <Upload className="mr-2 h-5 w-5" />
-              Upload your first document
-            </Button>
+        ) : error ? (
+          <div className="text-center py-10 text-red-600">
+            <p className="text-sm sm:text-base">{error}</p>
+          </div>
+        ) : filteredDocuments.length === 0 ? (
+          <div className="text-center py-10 text-gray-500">
+            <p className="text-sm sm:text-base">No documents found. Upload your first PDF!</p>
           </div>
         ) : (
-          <div className={`grid ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4' : 'grid-cols-1'} gap-6`}>
-            {sortedDocuments.map((doc) => (
+          <div className={`${
+            viewMode === 'grid' 
+              ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6' 
+              : 'space-y-3 sm:space-y-4'
+          }`}>
+            {filteredDocuments.map((doc) => (
               <DocumentCard
                 key={doc._id}
                 document={doc}
                 onDelete={handleDeleteDocument}
-                isDeleting={deletingId === doc._id}
                 onToggleFavorite={handleToggleFavorite}
+                viewMode={viewMode}
               />
             ))}
           </div>
         )}
-        {showUploadModal && (
-          <UploadModal
-            onClose={() => setShowUploadModal(false)}
-            onSuccess={handleUploadSuccess}
-          />
-        )}
       </div>
+
+      <UploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onSuccess={handleDocumentUploaded}
+      />
     </div>
   );
-};
-
-export default DashboardPage;
+}

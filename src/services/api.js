@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://deepsearch-backend-n99w.onrender.com/api'
+const API_URL = 'https://deepsearch-backend-n99w.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -24,7 +24,6 @@ api.interceptors.response.use(
   response => response,
   async error => {
     if (error.response && error.response.status === 401) {
-      console.warn('API Error: 401 Unauthorized. Session might be expired or invalid token.');
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       if (window.location.pathname !== '/login') {
@@ -38,6 +37,7 @@ api.interceptors.response.use(
 
 export const authAPI = {
   login: (email, password) => api.post('/auth/login', { email, password }),
+
   signup: (name, email, password) => api.post('/auth/signup', { name, email, password }),
 };
 
@@ -59,6 +59,8 @@ export const documentAPI = {
     }
     return api.get(url);
   },
+
+  ask: (payload) => api.post('/documents/ask', payload),
 
   getById: (id) => api.get(`/documents/${id}`),
 

@@ -1,8 +1,5 @@
-// src/context/AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-// --- FIX 1: The missing useAuth hook ---
-// This is the custom hook that your other components will use to get the context data.
 export const useAuth = () => {
   return useContext(AuthContext);
 };
@@ -11,10 +8,9 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [accessToken, setAccessToken] = useState(null); // --- FIX 2: Add state for the token
+  const [accessToken, setAccessToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // This effect runs once on app load to check for a persisted session
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
@@ -24,14 +20,12 @@ export const AuthProvider = ({ children }) => {
         const parsedUser = JSON.parse(userData);
         if (parsedUser && (parsedUser.id || parsedUser.email)) {
           setUser(parsedUser);
-          setAccessToken(token); // Set the token from localStorage into state
+          setAccessToken(token);
         } else {
-          // Clear invalid data from storage
           localStorage.removeItem('token');
           localStorage.removeItem('user');
         }
       } catch (e) {
-        console.error("Failed to parse user data from localStorage:", e);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
       }
@@ -39,30 +33,26 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []); 
 
-  // Log state for debugging
   useEffect(() => {
-    console.log('AuthContext State Changed:', { user, accessToken, loading });
   }, [user, accessToken, loading]);
 
   const login = (token, userData) => {
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
-    setAccessToken(token); // Set the token in state on login
-    console.log('AuthContext: User logged in:', userData);
+    setAccessToken(token);
   };
 
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
-    setAccessToken(null); // Clear the token from state on logout
-    console.log('AuthContext: User logged out.');
+    setAccessToken(null);
   };
 
   const value = {
     user,
-    accessToken, // --- FIX 2: Provide the accessToken to the rest of your app ---
+    accessToken,
     login,
     logout,
     loading
