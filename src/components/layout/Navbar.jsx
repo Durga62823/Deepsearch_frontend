@@ -55,7 +55,7 @@ const Navbar = ({ onUploadClick }) => {
 
   return (
     <nav className="bg-white border-b border-gray-200 text-foreground py-3 px-4 sm:py-4 sm:px-6 lg:px-20 shadow-sm relative z-[1000]">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
+      <div className="max-w-full mx-auto flex justify-between items-center">
         <div className="flex items-center">
           <Link to="/" className="flex items-center gap-2 font-semibold text-xl sm:text-2xl text-foreground hover:text-gray-700 transition-colors duration-200">
             Deep<span className="text-red-600">Search</span>

@@ -32,8 +32,7 @@ function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
-      <Route path="/" element={<Layout />}>
-        <Route 
+              <Route 
           path="dashboard" 
           element={
             <PrivateRoute>
@@ -61,7 +60,6 @@ function App() {
         <Route index element={<Navigate to="/login" replace />} />
        
         <Route path="*" element={<Navigate to="/login" replace />} />
-      </Route>
     </Routes>
   );
 }

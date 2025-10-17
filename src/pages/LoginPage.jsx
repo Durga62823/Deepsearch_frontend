@@ -32,7 +32,7 @@ export default function LoginPage() {
         setError("Login successful but missing token or user data.");
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed. Check credentials.");
+      setError(err.response?.data?.message);
     } finally {
       setLoading(false);
     }
