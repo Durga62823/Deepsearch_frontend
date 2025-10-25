@@ -64,12 +64,26 @@ const UploadModal = ({ isOpen, onClose, onSuccess }) => {
       console.log('📤 Calling documentAPI.upload...');
       const res = await documentAPI.upload(file);
       console.log('✅ Upload response:', res.data);
-      setMessage(res.data.message || 'Document uploaded successfully!');
-      onSuccess(res.data.document);
+      
+      // Handle both response formats for backward compatibility
+      const responseMessage = res.data.message || 'Document uploaded successfully!';
+      const documentData = res.data.document || res.data;
+      
+      setMessage(responseMessage);
+      setFile(null); // Clear the file
+      
+      // Wait a moment to show success message, then close and trigger callback
+      setTimeout(() => {
+        onSuccess(documentData);
+        onClose();
+      }, 1500);
     } catch (err) {
       console.error('❌ Upload error:', err);
       console.error('❌ Error response:', err.response?.data);
-      setError(err.response?.data?.message || 'Failed to upload document. Please try again.');
+      const errorMessage = err.response?.data?.message || 
+                          err.message || 
+                          'Failed to upload document. Please try again.';
+      setError(errorMessage);
       setMessage('');
     } finally {
       setUploading(false);

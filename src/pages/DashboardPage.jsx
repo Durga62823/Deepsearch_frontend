@@ -287,7 +287,15 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
- <Layout/>
+      
+      {/* Add UploadModal here */}
+      <UploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        onDocumentUploaded={handleDocumentUploaded}
+      />
+      
+      <Layout/>
     </div>
   );
 }
