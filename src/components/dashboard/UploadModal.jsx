@@ -63,13 +63,39 @@ const UploadModal = ({ isOpen, onClose, onSuccess }) => {
     try {
       console.log('📤 Calling documentAPI.upload...');
       const res = await documentAPI.upload(file);
-      console.log('✅ Upload response:', res.data);
-      setMessage(res.data.message || 'Document uploaded successfully!');
-      onSuccess(res.data.document);
+      console.log('✅ Upload response:', res);
+      console.log('✅ Upload response data:', res.data);
+      
+      // Handle both response formats for backward compatibility
+      const responseMessage = res.data?.message || 'Document uploaded successfully!';
+      const documentData = res.data?.document || res.data;
+      
+      console.log('📄 Document data:', documentData);
+      
+      setMessage(responseMessage);
+      setFile(null); // Clear the file
+      
+      // Wait a moment to show success message, then close and trigger callback
+      setTimeout(() => {
+        if (documentData && (documentData._id || documentData.id)) {
+          onSuccess(documentData);
+          onClose();
+        } else {
+          console.error('⚠️ No valid document data in response');
+          setError('Upload completed but document data is missing. Please refresh the page.');
+        }
+      }, 1500);
     } catch (err) {
       console.error('❌ Upload error:', err);
-      console.error('❌ Error response:', err.response?.data);
-      setError(err.response?.data?.message || 'Failed to upload document. Please try again.');
+      console.error('❌ Error response:', err.response);
+      console.error('❌ Error response data:', err.response?.data);
+      console.error('❌ Error message:', err.message);
+      
+      const errorMessage = err.response?.data?.message || 
+                          err.response?.data?.error ||
+                          err.message || 
+                          'Failed to upload document. Please try again.';
+      setError(errorMessage);
       setMessage('');
     } finally {
       setUploading(false);
@@ -181,13 +207,7 @@ const UploadModal = ({ isOpen, onClose, onSuccess }) => {
           </div>
 
           {/* Status Messages */}
-          {error && (
-            <Alert variant="destructive" className="border-red-200 bg-red-50">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle className="text-red-800">Upload Error</AlertTitle>
-              <AlertDescription className="text-red-700">{error}</AlertDescription>
-            </Alert>
-          )}
+
 
           {message && (
             <Alert className="border-green-200 bg-green-50">
