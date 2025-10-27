@@ -64,26 +64,12 @@ const UploadModal = ({ isOpen, onClose, onSuccess }) => {
       console.log('📤 Calling documentAPI.upload...');
       const res = await documentAPI.upload(file);
       console.log('✅ Upload response:', res.data);
-      
-      // Handle both response formats for backward compatibility
-      const responseMessage = res.data.message || 'Document uploaded successfully!';
-      const documentData = res.data.document || res.data;
-      
-      setMessage(responseMessage);
-      setFile(null); // Clear the file
-      
-      // Wait a moment to show success message, then close and trigger callback
-      setTimeout(() => {
-        onSuccess(documentData);
-        onClose();
-      }, 1500);
+      setMessage(res.data.message || 'Document uploaded successfully!');
+      onSuccess(res.data.document);
     } catch (err) {
       console.error('❌ Upload error:', err);
       console.error('❌ Error response:', err.response?.data);
-      const errorMessage = err.response?.data?.message || 
-                          err.message || 
-                          'Failed to upload document. Please try again.';
-      setError(errorMessage);
+      setError(err.response?.data?.message || 'Failed to upload document. Please try again.');
       setMessage('');
     } finally {
       setUploading(false);
@@ -103,10 +89,10 @@ const UploadModal = ({ isOpen, onClose, onSuccess }) => {
       <DialogContent className="w-[95vw] max-w-lg mx-auto bg-white rounded-2xl shadow-2xl border border-gray-100">
         <DialogHeader className="text-center pb-4">
           <div className="flex items-center justify-center gap-3 mb-2">
-            <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full">
+            <div className="p-3 bg-gradient-to-r bg-red-600 rounded-full">
               <Upload className="w-6 h-6 text-white" />
             </div>
-            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <DialogTitle className="text-2xl font-bold bg-gradient-to-r bg-red-600  bg-clip-text text-transparent">
               Upload Document
             </DialogTitle>
           </div>
@@ -121,10 +107,10 @@ const UploadModal = ({ isOpen, onClose, onSuccess }) => {
             {...getRootProps()}
             className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all duration-300 cursor-pointer ${
               isDragActive 
-                ? 'border-blue-400 bg-blue-50 scale-105' 
+                ? 'border-red-400 bg-blue-50 scale-105' 
                 : file 
                   ? 'border-green-400 bg-green-50' 
-                  : 'border-gray-300 bg-gray-50 hover:border-blue-400 hover:bg-blue-50'
+                  : 'border-gray-300 bg-gray-50 hover:border-red-400 hover:bg-blue-50'
             }`}
           >
             <input {...getInputProps()} />
@@ -155,10 +141,10 @@ const UploadModal = ({ isOpen, onClose, onSuccess }) => {
             ) : isDragActive ? (
               <div className="space-y-4">
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto animate-pulse">
-                  <Upload className="w-8 h-8 text-blue-600" />
+                  <Upload className="w-8 h-8 text-red-600" />
                 </div>
-                <p className="text-blue-600 font-semibold text-lg">Drop your PDF here!</p>
-                <p className="text-blue-500 text-sm">Release to upload</p>
+                <p className="text-red-600 font-semibold text-lg">Drop your PDF here!</p>
+                <p className="text-red-500 text-sm">Release to upload</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -172,7 +158,7 @@ const UploadModal = ({ isOpen, onClose, onSuccess }) => {
                   <p className="text-gray-500 text-sm mb-4">
                     or{' '}
                     <span 
-                      className="text-blue-600 underline cursor-pointer hover:text-blue-700 font-medium" 
+                      className="text-red-600 underline cursor-pointer hover:text-red-700 font-medium" 
                       onClick={open}
                     >
                       click to browse
@@ -224,7 +210,7 @@ const UploadModal = ({ isOpen, onClose, onSuccess }) => {
           <Button
             onClick={handleSubmit}
             disabled={!file || uploading}
-            className="w-full sm:w-auto order-1 sm:order-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+            className="w-full sm:w-auto order-1 sm:order-2 bg-gradient-to-r bg-red-500  hover:bg-red-600  text-white shadow-lg hover:shadow-xl transition-all duration-200"
           >
             {uploading ? (
               <>

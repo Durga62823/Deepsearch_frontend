@@ -195,9 +195,9 @@ export default function DashboardPage() {
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-12 border border-gray-200/50 shadow-lg">
             <div className="text-center">
               <div className="relative w-16 h-16 mx-auto mb-6">
-                <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600"></div>
+                <div className="animate-spin rounded-full h-16 w-16 border-4 border-red-200 border-t-red-600"></div>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-blue-600 animate-pulse" />
+                  <Sparkles className="w-6 h-6 text-red-600 animate-pulse" />
                 </div>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Loading Documents</h3>
@@ -225,7 +225,7 @@ export default function DashboardPage() {
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-12 border border-gray-200/50 shadow-lg">
             <div className="text-center">
               <div className="w-16 h-16 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <FileText className="w-8 h-8 text-blue-600" />
+                <FileText className="w-8 h-8 text-red-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 {searchTerm ? 'No documents found' : 'No documents yet'}
@@ -239,7 +239,7 @@ export default function DashboardPage() {
               {!searchTerm && (
                 <Button
                   onClick={() => setIsUploadModalOpen(true)}
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl"
+                  className="bg-gradient-to-r bg-red-600  text-white shadow-lg hover:shadow-xl"
                 >
                   <Plus className="w-5 h-5 mr-2" />
                   Upload Your First Document
@@ -256,7 +256,7 @@ export default function DashboardPage() {
                   {sortedDocuments.length} Document{sortedDocuments.length !== 1 ? 's' : ''}
                 </h2>
                 {searchTerm && (
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                  <Badge variant="secondary" className="bg-blue-100 text-red-800">
                     "{searchTerm}"
                   </Badge>
                 )}
